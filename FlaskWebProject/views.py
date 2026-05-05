@@ -56,11 +56,15 @@ def login():
     # normal login
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
+
         if user is None or not user.check_password(form.password.data):
+            app.logger.warning(f"Failed login attempt for user: {form.username.data}")
             flash('Invalid username or password')
             return redirect(url_for('login'))
 
+        app.logger.info(f"User {form.username.data} logged in successfully")
         login_user(user, remember=form.remember_me.data)
+
         return redirect(url_for('home'))
 
     # Microsoft login
@@ -76,6 +80,7 @@ def authorized():
         return redirect(url_for("home"))
 
     if "error" in request.args:
+        app.logger.warning("Microsoft login failed")
         return render_template("auth_error.html", result=request.args)
 
     if request.args.get('code'):
@@ -94,6 +99,7 @@ def authorized():
 
         user = User.query.filter_by(username="admin").first()
         login_user(user)
+        app.logger.info("Microsoft login successful")
 
         _save_cache(cache)
 
