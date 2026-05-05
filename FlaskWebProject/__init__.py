@@ -7,12 +7,20 @@ from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix   # ✅ IMPORTANT
 
 app = Flask(__name__)
 app.config.from_object(Config)
-# TODO: Add any logging levels and handlers with app.logger
+
+# ✅ Fix for Azure (VERY IMPORTANT for OAuth)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Optional logging
+logging.basicConfig(level=logging.INFO)
+
 Session(app)
 db = SQLAlchemy(app)
+
 login = LoginManager(app)
 login.login_view = 'login'
 
